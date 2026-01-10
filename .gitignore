@@ -9,3 +9,4 @@ venv/
 
 # Ignore data files (we don't version large datasets)
 data/
+.DS_Store/
