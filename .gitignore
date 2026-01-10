@@ -1,0 +1,11 @@
+# .gitignore
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.env
+venv/
+.idea/
+.vscode/
+
+# Ignore data files (we don't version large datasets)
+data/
