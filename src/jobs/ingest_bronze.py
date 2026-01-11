@@ -4,6 +4,9 @@ from pyspark.sql import DataFrame
 import os
 import sys
 
+sys.path.append(os.getcwd())
+from src.utils import create_spark_session
+
 # Configure Logging
 logging.basicConfig(
     level=logging.INFO,
@@ -12,28 +15,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def create_spark_session(app_name: str) -> SparkSession:
-    """
-    Creates and returns a SparkSession configured for local execution.
-    Optimization for Mac M1 (8GB RAM).
-    """
-    try:
-        spark = SparkSession.builder \
-            .appName(app_name) \
-            .config("spark.driver.memory", "2g") \
-            .config("spark.executor.memory", "2g") \
-            .config("spark.sql.shuffle.partitions", "4") \
-            .master("local[*]") \
-            .getOrCreate()
-            
-        # Set log level to WARN to reduce terminal noise
-        spark.sparkContext.setLogLevel("WARN")
-        
-        logger.info("SparkSession created successfully (M1 Optimized: 2GB RAM Limit).")
-        return spark
-    except Exception as e:
-        logger.error(f"Failed to create SparkSession: {e}")
-        raise
 
 def read_csv(spark: SparkSession, file_path: str) -> DataFrame:
     """

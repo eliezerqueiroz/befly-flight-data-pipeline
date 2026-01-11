@@ -4,6 +4,8 @@ import os
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
 
+sys.path.append(os.getcwd())
+from src.utils import create_spark_session
 
 # Configure Logging
 logging.basicConfig(
@@ -12,18 +14,6 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)]
 )
 logger = logging.getLogger(__name__)
-
-def create_spark_session(app_name: str) -> SparkSession:
-    """
-    Creates SparkSession with M1 optimizations.
-    """
-    return SparkSession.builder \
-        .appName(app_name) \
-        .config("spark.driver.memory", "2g") \
-        .config("spark.executor.memory", "2g") \
-        .config("spark.sql.shuffle.partitions", "4") \
-        .master("local[*]") \
-        .getOrCreate()
 
 def create_airline_kpis(df: DataFrame) -> DataFrame:
     """
