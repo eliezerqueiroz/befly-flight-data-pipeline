@@ -31,18 +31,28 @@ def create_airline_kpis(df: DataFrame) -> DataFrame:
     """
     logger.info("Aggregating KPIs by Airline...")
     
-    return df.groupBy("AIRLINE_NAME").agg(
+    # 1. Agregações Básicas (Totais Absolutos)
+    df_agg = df.groupBy("AIRLINE_NAME").agg(
         F.count("*").alias("total_flights"),
         F.sum("CANCELLED").alias("total_cancelled"),
-        # Média de atraso apenas para voos que não foram cancelados
         F.avg("ARRIVAL_DELAY").alias("avg_arrival_delay"),
-        # Taxa de cancelamento (Ex: 5.00 = 5%)
-        F.round((F.sum("CANCELLED") / F.count("*"))* 100, 2).alias("cancellation_rate"),
-        # Contagem de voos com status 'Delayed'
-        F.sum(F.when(F.col("FLIGHT_STATUS") == "Delayed", 1).otherwise(0)).alias("total_delayed_flights"),
-        # Taxa de atraso (Ex: 10.50 = 10.5%)
-        F.round((F.sum("total_delayed_flights") / F.count("*"))* 100, 2).alias("delay_rate")
-    ).orderBy(F.col("avg_arrival_delay").desc()) # Ordenar do maior atraso para o menor
+        F.sum(F.when(F.col("FLIGHT_STATUS") == "Delayed", 1).otherwise(0)).alias("total_delayed_flights")
+    )
+
+    # 2. Cálculos Derivados (Porcentagens e Arredondamentos)
+    # Agora que 'total_flights' e 'total_delayed_flights' existem, podemos usá-los.
+    df_final = df_agg.withColumn(
+        "cancellation_rate",
+        F.round((F.col("total_cancelled") / F.col("total_flights")) * 100, 2)
+    ).withColumn(
+        "delay_rate",
+        F.round((F.col("total_delayed_flights") / F.col("total_flights")) * 100, 2)
+    ).withColumn(
+        "avg_arrival_delay",
+        F.round(F.col("avg_arrival_delay"), 2)
+    ).orderBy(F.col("avg_arrival_delay").desc())
+
+    return df_final
 
 def create_daily_summary(df: DataFrame) -> DataFrame:
     """
