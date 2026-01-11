@@ -1,9 +1,11 @@
 # BeFly Data Engineering Challenge - Flight Data Pipeline
 
 ## Visão Geral
+
 Este projeto implementa um pipeline de dados seguindo a arquitetura **Medalhão (Bronze, Silver, Gold)** utilizando **PySpark**. O objetivo é processar dados históricos de voos para gerar insights sobre pontualidade e cancelamentos.
 
 O projeto foi desenvolvido com foco em:
+
 - **Performance:** Uso de formato Parquet e avaliação preguiçosa (Lazy Evaluation).
 - **Modularidade:** Código organizado em funções e utilitários reutilizáveis.
 - **Robustez:** Tratamento de tipos, nulos e logs detalhados.
@@ -15,18 +17,18 @@ O projeto foi desenvolvido com foco em:
 
 O fluxo de dados segue a estrutura de Data Lake:
 
-1.  **Ingestão (Bronze):**
+1. **Ingestão (Bronze):**
     - Leitura dos CSVs brutos (`airlines`, `airports`, `flights`).
     - Aplicação de filtro de particionamento (Mês = 1) para otimizar processamento.
     - Gravação em formato **Parquet** (compressão Snappy).
 
-2.  **Transformação (Silver):**
+2. **Transformação (Silver):**
     - Limpeza de dados e *Type Casting* (garantia de schema).
     - Criação de colunas derivadas (`FLIGHT_DATE`, `FLIGHT_STATUS`).
     - Enriquecimento via **Joins** com tabelas de dimensão (Companhias e Aeroportos).
     - Tratamento de ambiguidade em colunas de Origem/Destino.
 
-3.  **Agregação (Gold):**
+3. **Agregação (Gold):**
     - Geração de métricas de negócio (KPIs).
     - Tabelas finais: `airline_performance` (Pontualidade por cia) e `daily_summary` (Visão temporal).
 
@@ -52,3 +54,85 @@ befly-flight-data-pipeline/
 │   └── utils.py                  # Configurações compartilhadas (SparkSession)
 ├── requirements.txt
 └── README.md
+```
+
+---
+
+## Como Executar
+
+### Pré-requisitos
+
+- Python 3.8+
+- Java 8 ou 11 (Necessário para o Spark)
+
+### 1. Configuração do Ambiente
+
+```bash
+# Clone o repositório
+git clone <url-do-repositorio>
+cd befly-flight-data-pipeline
+
+# Crie e ative o ambiente virtual
+python3 -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
+
+# Instale as dependências
+pip install -r requirements.txt
+```
+
+### 2. Obtenção dos Dados
+
+Devido ao tamanho, os dados brutos não estão no repositório.
+
+1. Baixe o dataset "2015 Flight Delays and Cancellations" no Kaggle.
+2. Extraia os arquivos `flights.csv`, `airlines.csv` e `airports.csv`.
+3. Mova-os para a pasta: `data/raw/`.
+
+### 3. Execução do Pipeline
+
+Execute os scripts na ordem abaixo a partir da raiz do projeto:
+
+```bash
+# 1. Ingestão Bronze (Converte CSV -> Parquet + Filtro)
+python src/jobs/ingest_bronze.py
+
+# 2. Transformação Silver (Limpeza + Joins)
+python src/jobs/transform_silver.py
+
+# 3. Agregação Gold (KPIs de Negócio)
+python src/jobs/aggregate_gold.py
+```
+
+Os resultados estarão disponíveis na pasta `data/gold/` e um preview será exibido no terminal.
+
+---
+
+## Decisões Técnicas & Otimizações
+
+- **Leitura Otimizada:** O filtro `MONTH=1` é aplicado imediatamente após a leitura do CSV, reduzindo o volume de dados em memória antes de qualquer transformação pesada.
+- **Gerenciamento de Memória:** A `SparkSession` foi configurada via `src/utils.py` com limite de 2GB e 4 partições para evitar *Out of Memory* em ambientes de desenvolvimento (ex: Laptops com 8GB RAM).
+- **Logs:** Utilização da biblioteca `logging` em vez de `print` para garantir observabilidade profissional.
+
+---
+
+## Arquitetura em Nuvem (AWS)
+
+Para adaptar este pipeline local para um ambiente produtivo na AWS, a arquitetura seria modernizada da seguinte forma:
+
+1. **Storage (Data Lake):**
+    - Substituição do sistema de arquivos local pelo **Amazon S3**.
+    - Buckets separados para camadas: `s3://befly-datalake-bronze`, `s3://...-silver`, `s3://...-gold`.
+
+2. **Processamento (Compute):**
+    - Utilização do **AWS Glue** (Serverless Spark) para executar os jobs Python. O Glue gerencia a escala automática dos workers, ideal para processar o dataset completo (5M+ linhas) sem preocupação com infraestrutura.
+    - Alternativamente, **EMR** poderia ser usado para cargas de trabalho contínuas e muito pesadas.
+
+3. **Catálogo e Consumo:**
+    - **AWS Glue Crawler** para catalogar automaticamente os dados gerados na camada Gold.
+    - **Amazon Athena** para permitir que analistas façam consultas SQL diretamente nos arquivos Parquet no S3.
+
+4. **Orquestração:**
+    - **Apache Airflow (MWAA)** para gerenciar a dependência entre as tarefas (só rodar a Silver se a Bronze tiver sucesso) e agendamento diário.
+
+Essa arquitetura garante escalabilidade horizontal, baixo custo de armazenamento (S3) e separação entre computação e storage.
