@@ -63,7 +63,7 @@ def create_daily_summary(df: DataFrame) -> DataFrame:
     return df.groupBy("FLIGHT_DATE").agg(
         F.count("*").alias("total_flights"),
         F.sum("CANCELLED").alias("total_cancelled"),
-        F.avg("DEPARTURE_DELAY").alias("avg_departure_delay")
+        F.round(F.avg("DEPARTURE_DELAY"), 2).alias("avg_departure_delay")
     ).orderBy("FLIGHT_DATE")
 
 def main():
