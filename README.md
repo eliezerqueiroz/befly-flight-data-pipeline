@@ -54,6 +54,8 @@ befly-flight-data-pipeline/
 │   └── utils.py                  # Configurações compartilhadas (SparkSession)
 ├── requirements.txt
 └── README.md
+└── run_pipeline.sh               # Script shell Automatizado (executa todo pipeline)
+└── top_delayed_airlines.png      # Gráfico: Top 10 companhias que mais atrasam
 ```
 
 ---
