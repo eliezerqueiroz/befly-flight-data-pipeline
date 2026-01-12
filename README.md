@@ -91,20 +91,38 @@ Devido ao tamanho, os dados brutos não estão no repositório.
 
 ### 3. Execução do Pipeline
 
-Execute os scripts na ordem abaixo a partir da raiz do projeto:
+Existem duas formas de executar o projeto:
+
+#### Opção A: Orquestrador Automatizado (Recomendado)
+
+Para simular um ambiente produtivo, foi desenvolvido um script Shell que gerencia a dependência entre as camadas (Bronze → Silver → Gold) e interrompe o fluxo imediatamente em caso de erro (**Fail Fast**).
+
+1. Dê permissão de execução ao script (apenas na primeira vez):
+
+   ```bash
+   chmod +x run_pipeline.sh
+   ```
+
+2. Execute o pipeline completo:
+
+   ```bash
+   ./run_pipeline.sh
+   ```
+
+#### Opção B: Execução Manual (Passo a Passo)
+
+Caso queira rodar ou debugar uma etapa específica isoladamente:
 
 ```bash
-# 1. Ingestão Bronze (Converte CSV -> Parquet + Filtro)
+# 1. Ingestão Bronze
 python src/jobs/ingest_bronze.py
 
-# 2. Transformação Silver (Limpeza + Joins)
+# 2. Transformação Silver
 python src/jobs/transform_silver.py
 
-# 3. Agregação Gold (KPIs de Negócio)
+# 3. Agregação Gold
 python src/jobs/aggregate_gold.py
 ```
-
-Os resultados estarão disponíveis na pasta `data/gold/` e um preview será exibido no terminal.
 
 ---
 
@@ -113,6 +131,7 @@ Os resultados estarão disponíveis na pasta `data/gold/` e um preview será exi
 - **Leitura Otimizada:** O filtro `MONTH=1` é aplicado imediatamente após a leitura do CSV, reduzindo o volume de dados em memória antes de qualquer transformação pesada.
 - **Gerenciamento de Memória:** A `SparkSession` foi configurada via `src/utils.py` com limite de 2GB e 4 partições para evitar *Out of Memory* em ambientes de desenvolvimento (ex: Laptops com 8GB RAM).
 - **Logs:** Utilização da biblioteca `logging` em vez de `print` para garantir observabilidade profissional.
+- **Orquestração Local:** Implementação de um script Shell (`run_pipeline.sh`) que atua como um orquestrador linear simples. Ele garante a integridade do processo, impedindo que a camada Silver rode se a Bronze falhar, simulando o comportamento de dependência de tarefas de ferramentas como Apache Airflow.
 
 ---
 
