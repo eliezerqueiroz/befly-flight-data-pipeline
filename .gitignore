@@ -1,4 +1,6 @@
 # .gitignore
+
+# Python/System junk
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
@@ -6,7 +8,19 @@ __pycache__/
 venv/
 .idea/
 .vscode/
+.DS_Store
 
-# Ignore data files (we don't version large datasets)
-data/
-.DS_Store/
+# --- DATA CONFIGURATION ---
+
+# 1. Ignora TUDO dentro das subpastas de data
+data/raw/*
+data/bronze/*
+data/silver/*
+data/gold/*
+
+# 2. Mas NÃO ignora (!) os arquivos .gitkeep
+# Isso garante que a estrutura de pastas suba para o repo
+!data/raw/.gitkeep
+!data/bronze/.gitkeep
+!data/silver/.gitkeep
+!data/gold/.gitkeep
