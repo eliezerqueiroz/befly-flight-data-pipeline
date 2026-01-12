@@ -155,3 +155,27 @@ Para adaptar este pipeline local para um ambiente produtivo na AWS, a arquitetur
     - **Apache Airflow (MWAA)** para gerenciar a dependência entre as tarefas (só rodar a Silver se a Bronze tiver sucesso) e agendamento diário.
 
 Essa arquitetura garante escalabilidade horizontal, baixo custo de armazenamento (S3) e separação entre computação e storage.
+
+---
+
+## 🚀 Roadmap e Melhorias Futuras
+
+Este projeto foi desenhado como um MVP para demonstrar competências em PySpark e Arquitetura de Dados. Em um cenário produtivo real, as seguintes evoluções seriam priorizadas:
+
+- [ ] **Qualidade de Dados (Data Quality):**
+    - Integração com **Great Expectations** ou **Soda** para validação robusta de contratos de dados (ex: garantir que não existam códigos de aeroporto inválidos ou datas futuras) antes da promoção para a camada Silver.
+
+- [ ] **Testes Automatizados:**
+    - Implementação de testes unitários com **PyTest** para validar a lógica de funções isoladas (ex: cálculo de atrasos) e *mocks* de DataFrames para testes de integração sem dependência de dados externos.
+
+- [ ] **Modernização do Formato de Armazenamento:**
+    - Migração de Parquet para **Delta Lake**. Isso habilitaria:
+        - Transações ACID (garantia de integridade em escritas concorrentes).
+        - Suporte a operações de `MERGE` (Upserts) para processar apenas dados novos (Incremental Load) em vez de reprocessamento total.
+        - *Time Travel* para auditoria e rollback de dados.
+
+- [ ] **Containerização:**
+    - Criação de um `Dockerfile` para encapsular o ambiente (Java + Spark + Python), garantindo reprodutibilidade exata em qualquer sistema operacional e facilitando o deploy em Kubernetes ou AWS ECS.
+
+- [ ] **CI/CD:**
+    - Configuração de pipeline no **GitHub Actions** para execução automática de linter (`ruff`/`black`), testes unitários e deploy de infraestrutura (Terraform) a cada Pull Request.
